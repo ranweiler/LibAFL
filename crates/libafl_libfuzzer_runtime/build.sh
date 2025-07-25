@@ -117,4 +117,3 @@ else
   echo "Done! Wrote the runtime to \`${SCRIPT_DIR}/libFuzzer.a'"
   cleanup
 fi
-
