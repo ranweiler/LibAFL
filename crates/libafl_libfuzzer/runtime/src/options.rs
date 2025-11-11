@@ -24,10 +24,8 @@ fn parse_option(arg: &str) -> Option<RawOption<'_>> {
         }
     } else if PathBuf::from(arg).is_file() {
         Some(File(arg))
-    } else if PathBuf::from(arg).is_absolute() || arg.contains(std::path::MAIN_SEPARATOR) {
-        Some(Directory(arg))
     } else {
-        None
+        Some(Directory(arg))
     }
 }
 
