@@ -502,7 +502,14 @@ impl<'a> LibfuzzerOptionsBuilder<'a> {
             runs: self.runs,
             close_fd_mask: self.close_fd_mask,
             create_missing_dirs: self.create_missing_dirs,
-            max_len: self.max_len,
+            max_len: if self.max_len.is_none() {
+                eprintln!(
+                    "INFO: -max_len is not provided; libFuzzer will not generate inputs larger than 4096 bytes"
+                );
+                Some(4096)
+            } else {
+                self.max_len
+            },
             len_control: self.len_control,
             unknown: self.unknown.into_iter().map(ToString::to_string).collect(),
         }
