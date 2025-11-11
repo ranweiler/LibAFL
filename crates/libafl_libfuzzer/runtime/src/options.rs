@@ -456,7 +456,19 @@ impl<'a> LibfuzzerOptionsBuilder<'a> {
             dict: self.dict.map(|path| {
                 Tokens::from_file(path).expect("Couldn't load tokens from specified tokens file")
             }),
-            dirs: self.dirs.into_iter().map(PathBuf::from).collect(),
+            dirs: {
+                let dirs: Vec<_> = self.dirs.into_iter().map(PathBuf::from).collect();
+                if self.create_missing_dirs {
+                    for dir in &dirs {
+                        if !dir.exists() {
+                            std::fs::create_dir_all(dir)
+                                .unwrap_or_else(|_| panic!("Could not create directory {dir:?}!"));
+                        }
+                    }
+
+                }
+                dirs
+            },
             files: self.files.into_iter().map(PathBuf::from).collect(),
             ignore_crashes: self.ignore_crashes.unwrap_or_default(),
             ignore_timeouts: self.ignore_timeouts.unwrap_or_default(),
