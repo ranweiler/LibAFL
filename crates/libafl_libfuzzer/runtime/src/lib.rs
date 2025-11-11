@@ -676,11 +676,11 @@ pub unsafe extern "C" fn LLVMFuzzerRunDriver(
     }
 
     if *options.mode() != LibfuzzerMode::Tmin
-        && !options.dirs().is_empty()
-        && options.dirs().iter().all(|maybe_dir| maybe_dir.is_file())
+        && !options.files().is_empty()
+        && options.files().iter().all(|maybe_dir| maybe_dir.is_file())
     {
         // we've been requested to just run some inputs. Do so.
-        for input in options.dirs() {
+        for input in options.files() {
             let input = BytesInput::from_file(input).unwrap_or_else(|_| {
                 panic!("Couldn't load input {}", input.to_string_lossy().as_ref())
             });
