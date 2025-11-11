@@ -130,6 +130,8 @@ pub struct LibfuzzerOptions {
     #[allow(unused)]
     close_fd_mask: u8,
     create_missing_dirs: bool,
+    max_len: Option<usize>,
+    len_control: Option<usize>,
     unknown: Vec<String>,
 }
 
@@ -245,6 +247,14 @@ impl LibfuzzerOptions {
         self.create_missing_dirs
     }
 
+    pub fn max_len(&self) -> Option<usize> {
+        self.max_len
+    }
+
+    pub fn len_control(&self) -> Option<usize> {
+        self.len_control
+    }
+
     pub fn unknown(&self) -> &[String] {
         &self.unknown
     }
@@ -276,6 +286,8 @@ struct LibfuzzerOptionsBuilder<'a> {
     runs: usize,
     close_fd_mask: u8,
     create_missing_dirs: bool,
+    max_len: Option<usize>,
+    len_control: Option<usize>,
     unknown: Vec<&'a str>,
 }
 
@@ -382,6 +394,8 @@ impl<'a> LibfuzzerOptionsBuilder<'a> {
                         }
                         "runs" => self.runs = parse_or_bail!(name, value, usize),
                         "close_fd_mask" => self.close_fd_mask = parse_or_bail!(name, value, u8),
+                        "max_len" => self.max_len = Some(parse_or_bail!(name, value, usize)),
+                        "len_control" => self.len_control = Some(parse_or_bail!(name, value, usize)),
                         "help" => {
                             println!(
                                 "Usage:\n\
@@ -411,7 +425,9 @@ impl<'a> LibfuzzerOptionsBuilder<'a> {
                                 shrink                                 0       If 1, try to shrink corpus elements.\n\
                                 skip_tracing                           0       If 1, skip coverage tracing for faster execution.\n\
                                 tui                                    0       If 1, use the terminal UI interface.\n\
-                                runs                                   0       Number of individual test runs (0 for infinite runs).\n\
+                                runs                                   0       Number of individual test runs (0 for infinite runmax_len,s).\n\
+                                max_len                                0       Maximum length of the test input. Contents of corpus files are going to be truncated to this value. If 0, libFuzzer tries to guess a good value based on the corpus and reports it.\n\
+                                len_control                            100     Try generating small inputs first, then try larger inputs over time.  Specifies the rate at which the length limit is increased (smaller == faster). If 0, immediately try inputs with size up to max_len. Default value is 0, if LLVMFuzzerCustomMutator is used.\n\
                                 close_fd_mask                          0       If 1, close stdout; if 2, close stderr; if 3, close both.\n\
                                 merge                                  0       If 1, merge multiple corpora into a single one.\n\
                                 minimize_crash                         0       If 1, minimize crashes to their smallest reproducing input.\n\
@@ -486,6 +502,8 @@ impl<'a> LibfuzzerOptionsBuilder<'a> {
             runs: self.runs,
             close_fd_mask: self.close_fd_mask,
             create_missing_dirs: self.create_missing_dirs,
+            max_len: self.max_len,
+            len_control: self.len_control,
             unknown: self.unknown.into_iter().map(ToString::to_string).collect(),
         }
     }
