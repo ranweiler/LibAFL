@@ -50,6 +50,7 @@ pub struct LibFuzzerEventManager<I, MT, S> {
     events: Vec<EventWithStats<I>>,
     phantom: PhantomData<S>,
     client_stats_manager: ClientStatsManager,
+    next_pulse: u64,
 }
 
 impl<I, MT, S> Debug for LibFuzzerEventManager<I, MT, S>
@@ -151,12 +152,17 @@ where
     ) -> Result<(), Error> {
         // LibFuzzer criteria: execs is power of two and at least 2 seconds
         // since startup (tries to avoid pulse during corpus loading)
-        if *state.executions() & (*state.executions() - 1) == 0
-            && current_time()
-                .checked_sub(self.client_stats_manager.start_time())
-                .unwrap_or_default()
-                > Duration::from_secs(2)
-        {
+        let execs = *state.executions();
+        let do_pulse = if execs > self.next_pulse {
+            self.next_pulse = execs.next_power_of_two();
+            true
+        } else {
+            false
+        };
+
+        let runtime = current_time().saturating_sub(self.client_stats_manager.start_time());
+
+        if do_pulse && runtime > Duration::from_secs(2) {
             self.report_progress(state)
         } else {
             Ok(())
@@ -192,6 +198,7 @@ where
             monitor,
             events: vec![],
             client_stats_manager: ClientStatsManager::default(),
+            next_pulse: 1,
             phantom: PhantomData,
         }
     }
