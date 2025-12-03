@@ -229,7 +229,7 @@ fn create_monitor_closure() -> impl Fn(&str) + Clone {
             std::mem::forget(stderr); // do not close the descriptor!
         }
         #[cfg(not(unix))]
-        println!("{s}");
+        eprintln!("{s}");
     }
 }
 
